@@ -1,0 +1,17 @@
+forbidden_words = {"overjoyed", "sad", "gloomy", "hate", "guilt", "embarrassed", "lonely"}
+
+while True:
+    user_input = input("Type here...(or type 'exit' to quit): ").strip().lower()
+
+    if user_input in {"exit", "quit"}:
+        print("Goodbye")
+        break
+
+   
+    input_words = user_input.split()
+
+    
+    if any(word in forbidden_words for word in input_words):
+        print("The interaction is overboarding")
+    else:
+        pass
