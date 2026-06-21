@@ -1,17 +1,90 @@
-forbidden_words = {"overjoyed", "sad", "gloomy", "hate", "guilt", "embarrassed", "lonely"}
+import json
+import os
+import re
 
-while True:
-    user_input = input("Type here...(or type 'exit' to quit): ").strip().lower()
+FORBIDDEN_FILE = "forbidden_words.json"
 
-    if user_input in {"exit", "quit"}:
-        print("Goodbye")
-        break
+def load_forbidden():
+    if os.path.exists(FORBIDDEN_FILE):
+        try:
+            with open(FORBIDDEN_FILE, "r", encoding="utf-8") as f:
+                return set(json.load(f))
+        except Exception:
+            pass
+    return {"overjoyed", "sad", "gloomy", "hate", "guilt", "embarrassed", "lonely"}
 
-   
-    input_words = user_input.split()
+def save_forbidden(words):
+    try:
+        with open(FORBIDDEN_FILE, "w", encoding="utf-8") as f:
+            json.dump(sorted(words), f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print("Warning: could not save forbidden words:", e)
 
-    
-    if any(word in forbidden_words for word in input_words):
-        print("The interaction is overboarding")
-    else:
-        pass
+def tokenize(text):
+    # returns only word characters, lowercased
+    return re.findall(r"\w+", text.lower())
+
+def print_help():
+    print("Commands:")
+    print("  define <word>   - add a forbidden word")
+    print("  undefine <word> - remove a forbidden word")
+    print("  list            - list forbidden words")
+    print("  exit / quit     - exit the program")
+    print("Otherwise, type a sentence and the program will check for forbidden words.")
+
+def main():
+    forbidden_words = load_forbidden()
+    print("VOID NOTIFIER started. Type 'help' for commands.")
+    while True:
+        user_input = input("Type here...(or type 'exit' to quit): ").strip()
+
+        if not user_input:
+            continue
+
+        cmd = user_input.strip()
+
+        if cmd.lower() in {"exit", "quit"}:
+            print("Goodbye")
+            break
+
+        if cmd.lower() == "help":
+            print_help()
+            continue
+
+        if cmd.lower().startswith("define "):
+            word = cmd[7:].strip().lower()
+            if word:
+                forbidden_words.add(word)
+                save_forbidden(forbidden_words)
+                print(f"Defined forbidden word: '{word}'")
+            else:
+                print("Usage: define <word>")
+            continue
+
+        if cmd.lower().startswith("undefine "):
+            word = cmd[9:].strip().lower()
+            if word:
+                if word in forbidden_words:
+                    forbidden_words.remove(word)
+                    save_forbidden(forbidden_words)
+                    print(f"Removed forbidden word: '{word}'")
+                else:
+                    print(f"'{word}' was not in the forbidden list.")
+            else:
+                print("Usage: undefine <word>")
+            continue
+
+        if cmd.lower() == "list":
+            print("Forbidden words:", ", ".join(sorted(forbidden_words)))
+            continue
+
+        # Regular message — check tokens
+        input_words = tokenize(user_input)
+        if any(word in forbidden_words for word in input_words):
+            print("The interaction is overboarding")
+        else:
+            # No-op or you can add a normal response here
+            pass
+
+if __name__ == "__main__":
+    main()
